@@ -1,6 +1,5 @@
-// import 'dart:async';
 import 'dart:io';
-
+// import 'dart:async';
 import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
 // import 'dart:convert';
@@ -11,6 +10,7 @@ import './constant.dart';
 import './store_data.dart';
 import './font_size.dart';
 import './location_provider.dart';
+import 'country_select_btn.dart';
 
 void main() {
   runApp(MyApp());
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => StoreDetail()),
+        // ChangeNotifierProvider(create: (context) => StoreDetail()),
         ChangeNotifierProvider(create: (context) => LocaitonProvider()),
       ],
       child: MaterialApp(
@@ -44,6 +44,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   var _isInit = true;
   var _isLoading = false;
+  List<CitySelection> selectedCity = [];
+
   @override
   void initState() {
     super.initState();
@@ -56,7 +58,9 @@ class _HomeState extends State<Home> {
         setState(() {
           _isLoading = true;
         });
-        Provider.of<LocaitonProvider>(context).fetchAndSetLocation().then((_) {
+        Provider.of<LocaitonProvider>(context, listen: false)
+            .fetchAndSetLocation()
+            .then((_) {
           setState(() {
             _isLoading = false;
           });
@@ -71,86 +75,43 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     final data = Provider.of<LocaitonProvider>(context, listen: false);
     final extractedData = data.items;
-    // print(extractedData[0].state);
-    print(extractedData[0].state); // => 서울
-    print(extractedData[0].sublist![0]['key']); // => A-1
-    print(extractedData[0].sublist![0]['value']); // => 강남구
-
-    // final statusData = extractedData.map((region) => region.state).toList();
-    // final cityKeyData = extractedData.map((region) => region.sublist).toList();
-    var btnStyle = Theme.of(context)
-        .textTheme
-        .button!
-        .copyWith(fontSize: kCategoryBtnFontSize(context));
     return Scaffold(
-      appBar: AppBar(title: Text('data')),
-      body: Center(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            primary: kMainColor,
+      appBar: AppBar(title: const Text('data')),
+      body: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        width: MediaQuery.of(context).size.width * 0.8,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemBuilder: (context, index) => ChangeNotifierProvider.value(
+            value: extractedData[index],
+            child: textContainer(extractedData[index]),
           ),
-          child: Row(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(right: 5.0),
-                child: Icon(
-                  Icons.where_to_vote_outlined,
-                  size: kdisplayHeight(context) * 13.5 / 812,
-                ),
-              ),
-              //Calendar 초기값
-              Text('전체지역'),
-            ],
-          ),
-          onPressed: () async {
-            var selectedLocation = await showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        color: Colors.white,
-                      ),
-                      padding: const EdgeInsets.all(15),
-                      width: MediaQuery.of(context).size.width * 0.85,
-                      height: Platform.isIOS
-                          ? kdisplayHeight(context) * 0.545
-                          : kdisplayHeight(context) * 0.59,
-                      // child: regionBox(statusData[0]!),
-                    ),
-                  );
-                });
-          },
+          itemCount: extractedData.length,
         ),
       ),
     );
   }
 
-  Widget btn(){
-    return Container(
-      decoration: BoxDecoration(
-        
-      ),
-      child: Text(''),
-    );
+  Widget textContainer(StateData location) {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            child: Text(location.state!),
+          ),
+          Wrap(
+            children: [
+              for (int i = 0; i < location.sublist!.length; i++)
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 3, horizontal: 6),
+                  child: Text(location.sublist![i]['value']),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(50),
+                    border: Border.all(color: Colors.black),
+                  ),
+                ),
+            ],
+          ),
+        ]);
   }
-
-  // Widget regionBox(String state) {
-  //   return Column(
-  //     children: <Widget>[
-  //       Container(
-  //         child: Text(state),
-  //       ),
-  //       GridView.builder(
-  //         gridDelegate:
-  //             SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: kdisplayHeight(context) * 300 / 812),
-  //         itemBuilder: (context, index) {
-  //           return;
-  //         },
-  //       ),
-  //     ],
-  //   );
-  // }
-
 }

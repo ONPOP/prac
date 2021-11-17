@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 
-class Location with ChangeNotifier {
+class StateData with ChangeNotifier {
   String? state;
   List? sublist;
-  Location({
+  StateData({
     this.state,
     this.sublist,
   });
 }
 
 class LocaitonProvider with ChangeNotifier {
-  List<Location> _items = [];
+  List<StateData> _items = [];
 
-  List<Location> get items {
+  List<StateData> get items {
     return [..._items];
   }
 
@@ -25,19 +25,24 @@ class LocaitonProvider with ChangeNotifier {
     String url = 'https://dev-api.onpop.co.kr/v1/api/addressList';
     try {
       final response = await http.get(Uri.parse(url));
-      final extractedData =
-          jsonDecode(utf8.decode(response.bodyBytes))['response']
-              as List<dynamic>;
-      List<Location> locationData = [];
-      extractedData.forEach(
-        (data) {
-          locationData.add(Location(
-            state: data['value'],
-            sublist: data['sublist'],
-          ));
-        },
-      );
-      _items = locationData;
+      if (response.statusCode == 200) {
+        final extractedData =
+            jsonDecode(utf8.decode(response.bodyBytes))['response']
+                as List<dynamic>;
+        List<StateData> locationData = [];
+        extractedData.forEach(
+          (data) {
+            locationData.add(StateData(
+              state: data['value'],
+              sublist: data['sublist'],
+            ));
+          },
+        );
+        _items = locationData;
+      } else {
+        return ;
+      }
+
       // List<String> stateList = [];
       // locationData.map((data) {
       //   return stateList.add(data.state!);
